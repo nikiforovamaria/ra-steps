@@ -1,32 +1,39 @@
-import { useRef } from 'react'
-import PropTypes from 'prop-types'
+import PropTypes from 'prop-types';
 
 export default function Form(props) {
-  const { onAddItem, handleTimestamp, handleDistance } = props;
-
-  const formRef = useRef();
-
-  const onClick = () => {
-    formRef.current.reset();
-  }
+  const {form, onFormChange, onFormSubmit } = props;
 
   return (
-    <form ref={formRef} className="form" onSubmit={(e) => onAddItem(e)}>
-      <div className="form__date">
-        <div>Дата (ДД.ММ.ГГ)</div>
-        <input placeholder='Введите дату' id="date" name="date" type="text" onChange={(e) => handleTimestamp(e)}/>
-      </div>
-      <div className="form__distance">
-        <div>Пройдено км</div>
-        <input placeholder='Введите дистанцию' id="distance" name="distance" type="text" onChange={(e) => handleDistance(e)}/>
-      </div>
-      <input onClick={(e) => onClick(e)} id="submit" type="submit" value="OK"/>
+    <form className="workout-form" onSubmit={onFormSubmit}>
+      <section className="workout-section">
+        <label htmlFor='date'>
+          Дата(ДД.ММ.ГГ)
+        </label>
+        <input id='date' 
+          type="date" 
+          name="date" 
+          className="workout-input" 
+          value={form.date} 
+          onChange={onFormChange}/>
+      </section>
+
+      <section className="workout-section">
+        <label htmlFor='path'>
+          Пройдено, км
+        </label>
+        <input id='path'
+           type="text"
+           name="path"
+           className="workout-input"
+           value={form.path}
+           onChange={onFormChange}/>
+      </section>
+
+      <button>Ok</button>
     </form>
-  )
+  );
 }
 
 Form.propTypes = {
-  onAddItem: PropTypes.func,
-  handleTimestamp: PropTypes.func,
-  handleDistance: PropTypes.func,
+  form: PropTypes.object,
 }

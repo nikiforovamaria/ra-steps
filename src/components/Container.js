@@ -1,97 +1,65 @@
-import { nanoid } from 'nanoid';
-import React, { useState } from 'react'
-import Form from './Form'
-import List from './List'
-
-const toDate = (input) => {
-  const parts = input.split('.')
-  const date = new Date(
-    parseInt(parts[2], 10), 
-    parseInt(parts[1], 10) - 1, 
-    parseInt(parts[0], 10)
-  );
-  const day = date.getDate().toString().length === 1 ? `0${date.getDate()}` : date.getDate();
-  const month = date.getMonth().toString().length === 1 ? `0${date.getMonth() + 1}` : date.getMonth() + 1;
-  return {
-    date,
-    string: `${day}.${(month).toString()}.${date.getFullYear()}`
-  }
-};
-
-let ITEMS = [
-  {
-    key: nanoid(5),
-    timestamp: '20.07.2019',
-    distance: '5'
-  },
-  {
-    key: nanoid(5),
-    timestamp: '08.12.1996',
-    distance: '10'
-  },
-  {
-    key: nanoid(5),
-    timestamp: '18.07.2019',
-    distance: '8.8'
-  },
-];
+import { useState } from 'react';
+import Form from './Form';
+import List from './List';
 
 export default function Container() {
 
-  const [state, setState] = useState(ITEMS.sort((a, b) => toDate(a.timestamp).date < toDate(b.timestamp).date ? 1 : -1));
   const [form, setForm] = useState({
-    timestamp: '',
-    distance: ''
-  })
+    date: '2021-10-10',
+    path: '10.5',
+  });
 
-  const handleTimestamp = (event) => {
-    const { value } = event.target;
-    setForm( prev => ({ ...prev, timestamp: value }));
+  const [list, setList] = useState([]);
+
+  const onChange = (e) => {
+    e.target.value = e.target.value.replace(',', '.');
+    setForm((prev) => ({...prev, [e.target.name]: e.target.value}));
   }
 
-  const handleDistance = (event) => {
-    const { value } = event.target;
-    setForm( prev => ({ ...prev, distance: value }));
-  }
-
-  const onAddItem = (e) => {
+  const onSubmit = (e) => {
     e.preventDefault();
-    const date = toDate(form.timestamp).string;
-    const { distance } = form;
-    if (state.find(item => item.timestamp === date)) {
-      setState(prev => {
-        const newState = [];
-        prev.forEach(item => {
-          if (item.timestamp === date) {
-            const newDistance = (+item.distance + +distance).toString();
-            item = {
-              key: nanoid(5),
-              timestamp: date,
-              distance: newDistance,
-            }
-          }
-          newState.push(item);
-        })
-        return newState.sort((a, b) => toDate(a.timestamp).date < toDate(b.timestamp).date ? 1 : -1);
-      })
-    } else {
-      setState(prev => {
-        return [
-          ...prev,
-          {
-            key: nanoid(5),
-            timestamp: date,
-            distance,
-          }
-         ].sort((a, b) => toDate(a.timestamp).date < toDate(b.timestamp).date ? 1 : -1)
-      })
+
+    if (!form.date || !form.path) return;
+
+    if (/[^0-9.]/.test(form.path)) {
+      setForm((prev) => ({...prev, path: ''}));
+      return;
     }
+
+    setList((prev) => {
+      let copy = [...prev.map((workout) => ({...workout}))];
+
+      if (!prev.find((item) => item.date === form.date)) {
+        copy.push(form);
+      } else {
+        const itemToChange = copy.find((item) => item.date === form.date);
+
+        itemToChange.path = '' + (+itemToChange.path + +form.path);
+      }
+
+      return copy.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    });
+
+    setForm((prev) => ({...prev, date: '', path: ''}));
+  }
+
+  const onDelWorkout = (item) => {
+    setList((prev) => [...prev].filter((workout) => workout !== item));
+  }
+
+  const onEditWorkout = (item) => {
+    setForm((prev) => ({...prev, date: item.date, path: item.path}));
   }
 
   return (
-    <div className="container">
-      <Form setForm={setForm} onAddItem={onAddItem} handleTimestamp={handleTimestamp} handleDistance={handleDistance} />
-      <List items={state} setState={setState} />
+    <div className="workout-box">
+      <Form form={form}
+        onFormChange={onChange}
+        onFormSubmit={onSubmit}/>
+
+      <List workouts={list} 
+        onDelClick={onDelWorkout}
+        onEditClick={onEditWorkout}/>
     </div>
-  )
+  );
 }
